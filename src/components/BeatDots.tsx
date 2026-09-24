@@ -2,31 +2,23 @@ import { motion } from 'motion/react';
 
 type Props = { beatsPerBar: number; beat: number | null; accent: boolean };
 
+// The current beat's bubble hops up and lands with a wobble; the accented downbeat is coral.
 export function BeatDots({ beatsPerBar, beat, accent }: Props) {
   return (
-    <div className="flex h-4 items-center justify-center gap-3.5" aria-hidden>
+    <div className="flex h-7 items-end justify-center gap-3" aria-hidden>
       {Array.from({ length: beatsPerBar }, (_, i) => {
         const active = beat === i;
         const isAccent = accent && i === 0 && beatsPerBar > 1;
         return (
           <motion.span
             key={i}
-            className="block size-2 rounded-full"
-            initial={false}
-            animate={{
-              scale: active ? 1.5 : 1,
-              backgroundColor: active
-                ? isAccent
-                  ? '#dcbf8a'
-                  : '#fafafa'
-                : isAccent
-                  ? 'rgba(220,191,138,0.28)'
-                  : 'rgba(255,255,255,0.14)',
-              boxShadow: active
-                ? `0 0 14px ${isAccent ? 'rgba(220,191,138,0.7)' : 'rgba(255,255,255,0.45)'}`
-                : '0 0 0px rgba(0,0,0,0)',
-            }}
-            transition={{ duration: active ? 0.06 : 0.35, ease: 'easeOut' }}
+            layout
+            initial={{ scale: 0 }}
+            animate={{ scale: active ? 1.25 : 1, y: active ? -8 : 0 }}
+            transition={active ? { type: 'spring', bounce: 0.6, duration: 0.3 } : { type: 'spring', bounce: 0.5, duration: 0.5 }}
+            className={`block size-4 rounded-full transition-colors ${active ? 'duration-75' : 'duration-300'} ${
+              active ? (isAccent ? 'bg-coral' : 'bg-mint') : isAccent ? 'bg-coral-pale' : 'bg-ink-faint'
+            }`}
           />
         );
       })}

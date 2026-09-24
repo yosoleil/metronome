@@ -1,40 +1,34 @@
 import { tempoMarking } from '../lib/tempo.ts';
+import { RollingNumber, SwapText } from './RollingNumber.tsx';
 import { StepButton } from './StepButton.tsx';
-
-// DSEG treats "!" as a blank the width of a digit, which keeps 2- and 3-digit tempos aligned
-// over the unlit "888" segments.
-const pad = (bpm: number) => String(bpm).padStart(3, '!');
 
 type Props = { bpm: number; onChange: (update: number | ((prev: number) => number)) => void };
 
 export function BpmDisplay({ bpm, onChange }: Props) {
   return (
     <div className="flex w-full items-center justify-between gap-2">
-      <StepButton label="テンポを1下げる" onStep={() => onChange((b) => b - 1)}>
-        <path d="M5 12h14" />
+      <StepButton label="テンポを下げる" onStep={() => onChange((b) => b - 1)}>
+        <path d="M6 12h12" />
       </StepButton>
 
       <div className="flex flex-col items-center">
-        <div className="relative font-digital text-[clamp(3rem,15vw,4.75rem)] leading-none tracking-tight">
-          <span aria-hidden className="text-white/[0.045]">
-            888
+        <div aria-hidden className="flex items-baseline gap-1.5">
+          <span className="text-[clamp(4.25rem,21vw,5.75rem)] leading-none font-black tracking-[-0.03em]">
+            <RollingNumber value={bpm} />
           </span>
-          <span aria-hidden className="absolute inset-0 text-zinc-50 [text-shadow:0_0_24px_rgb(255_255_255/0.18)]">
-            {pad(bpm)}
-          </span>
-          <span className="sr-only">
-            {bpm} BPM
-          </span>
+          <span className="text-[15px] font-black tracking-[0.06em] text-coral">BPM</span>
         </div>
-        <div className="mt-3 flex items-center gap-2 text-[11px] font-medium tracking-[0.32em] text-zinc-500">
-          <span>BPM</span>
-          <span className="size-0.5 rounded-full bg-zinc-600" />
-          <span className="text-gold/90 italic tracking-[0.18em]">{tempoMarking(bpm)}</span>
+        <div aria-hidden className="relative mt-2 flex h-7 items-center rounded-full bg-mustard-pale px-3.5 text-[14px] font-extrabold text-ink">
+          <span className="mr-1.5 text-mustard-deep">♪</span>
+          <SwapText text={tempoMarking(bpm)} />
         </div>
+        <span className="sr-only">
+          {bpm} BPM、{tempoMarking(bpm)}
+        </span>
       </div>
 
-      <StepButton label="テンポを1上げる" onStep={() => onChange((b) => b + 1)}>
-        <path d="M12 5v14M5 12h14" />
+      <StepButton label="テンポを上げる" onStep={() => onChange((b) => b + 1)}>
+        <path d="M12 6v12M6 12h12" />
       </StepButton>
     </div>
   );

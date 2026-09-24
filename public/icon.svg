@@ -1,17 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f4f4f5"/>
-      <stop offset="0.5" stop-color="#a8a29e"/>
-      <stop offset="1" stop-color="#57534e"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" fill="#09090b"/>
-  <path d="M146 420 H366 L292 104 H220 Z" fill="none" stroke="#dcbf8a" stroke-width="10" stroke-linejoin="round"/>
+  <rect width="512" height="512" fill="#5fd3b0"/>
+  <path d="M150 424 Q118 424 124 392 L196 124 Q202 104 222 104 H290 Q310 104 316 124 L388 392 Q394 424 362 424 Z" fill="#3fb592" transform="translate(0 14)"/>
+  <path d="M150 424 Q118 424 124 392 L196 124 Q202 104 222 104 H290 Q310 104 316 124 L388 392 Q394 424 362 424 Z" fill="#fffbf0"/>
   <g transform="rotate(16 256 380)">
-    <line x1="256" y1="380" x2="256" y2="92" stroke="#fafafa" stroke-width="10" stroke-linecap="round"/>
-    <path d="M232 196 H280 L290 236 H222 Z" fill="url(#metal)" stroke-linejoin="round"/>
-    <line x1="220" y1="216" x2="292" y2="216" stroke="#b89a66" stroke-width="5"/>
+    <line x1="256" y1="380" x2="256" y2="96" stroke="#ff7f7f" stroke-width="26" stroke-linecap="round"/>
+    <circle cx="256" cy="210" r="50" fill="#e5a91c" transform="translate(0 8)"/>
+    <circle cx="256" cy="210" r="50" fill="#ffc93c"/>
+    <ellipse cx="240" cy="204" rx="6" ry="8" fill="#3b3240"/>
+    <ellipse cx="272" cy="204" rx="6" ry="8" fill="#3b3240"/>
+    <path d="M246 222 Q256 232 266 222" fill="none" stroke="#3b3240" stroke-width="5" stroke-linecap="round"/>
   </g>
-  <circle cx="256" cy="380" r="15" fill="#dcbf8a"/>
+  <circle cx="256" cy="380" r="28" fill="#3fb592" transform="translate(0 5)"/>
+  <circle cx="256" cy="380" r="28" fill="#5fd3b0"/>
+  <circle cx="256" cy="380" r="10" fill="#fffbf0"/>
 </svg>

@@ -1,6 +1,6 @@
 # Metronome
 
-振り子式のメトロノーム Web アプリ（PWA）。React + Vite + Tailwind CSS + Motion。
+振り子式のメトロノーム Web アプリ（PWA）。React + Vite + Tailwind CSS + Motion。アイボリー × パステルのポップなデザインで、ボタンやおもりはゼリーのように弾みます。ライト / ダークモードは端末の設定に追従します。
 
 ## 特徴
 
@@ -13,7 +13,7 @@
 
 | キー | 動作 |
 |---|---|
-| Space | 再生 / 停止 |
+| Space | 開始 / 停止 |
 | ↑ / ↓ | テンポ ±1（Shift で ±10） |
 | T | タップテンポ |
 
@@ -29,4 +29,4 @@ npm run build
 
 ## クレジット
 
-BPM 表示に [DSEG](https://www.keshikan.net/fonts.html) フォント（SIL Open Font License 1.1）を使用しています。
+フォントに [Nunito](https://fonts.google.com/specimen/Nunito) と [M PLUS Rounded 1c](https://fonts.google.com/specimen/M+PLUS+Rounded+1c)（いずれも SIL Open Font License 1.1）を使用しています。

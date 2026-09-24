@@ -1,6 +1,7 @@
-import { useAnimate, useReducedMotion } from 'motion/react';
+import { motion, useAnimate, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import type { BeatEvent } from '../audio/MetronomeEngine.ts';
+import { JELLY, squish } from '../lib/jelly.ts';
 import {
   MAX_BPM,
   MIN_BPM,
@@ -13,12 +14,18 @@ import {
 } from '../lib/tempo.ts';
 
 // Geometry in SVG user units (viewBox 0 0 300 400).
-const PIVOT = { x: 150, y: 350 };
-const ROD_LENGTH = 316;
+const PIVOT = { x: 150, y: 346 };
+const ROD_LENGTH = 312;
 /** Distance from the pivot to the weight's index line at the fastest / slowest tempo. */
-const R_FAST = 76;
-const R_SLOW = 290;
+const R_FAST = 72;
+const R_SLOW = 282;
+const WEIGHT_R = 25;
+/** Right edge of the tempo scale (tick dots). */
+const SCALE_X = 112;
 const AMPLITUDE = 24;
+
+// Rounded trapezoid: wide foot, narrow top.
+const HOUSING = 'M54 386 Q30 386 35 362 L74 74 Q77 54 97 54 L203 54 Q223 54 226 74 L265 362 Q270 386 246 386 Z';
 
 const radiusFor = (bpm: number) => R_FAST + bpmToRodPosition(bpm) * (R_SLOW - R_FAST);
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
@@ -55,7 +62,7 @@ export function Pendulum({ bpm, onBpmChange, playing, getBeatPosition, onBeat }:
     return () => cancelAnimationFrame(raf);
   }, [playing, reduceMotion, getBeatPosition]);
 
-  // Beat flashes: pivot glow, the swing end that was just reached, and a glint on the weight.
+  // Beat effects: a puff at the pivot, a pop at the swing end just reached, and the weight goes "boing".
   useEffect(
     () =>
       onBeat(({ accent, count, interval }) => {
@@ -69,10 +76,11 @@ export function Pendulum({ bpm, onBpmChange, playing, getBeatPosition, onBeat }:
           });
           animate(selector, { opacity: [peak, rest], ...extra }, fade);
         };
-        flash(accent ? '[data-pivot-accent]' : '[data-pivot]', 1, 0);
-        flash('[data-weight-glint]', accent ? 1 : 0.55, 0);
+        flash(accent ? '[data-pivot-accent]' : '[data-pivot]', accent ? 0.9 : 0.7, 0, { scale: [0.6, 1.4] });
         if (!reduceMotion) {
-          flash(`[data-end="${count % 2 === 0 ? 'right' : 'left'}"]`, 1, 0.15, { scale: [1.8, 1] });
+          flash(`[data-end="${count % 2 === 0 ? 'right' : 'left'}"]`, 1, 0.25, { scale: [2, 1] });
+          const body = scope.current?.querySelector('[data-weight-body]');
+          if (body) squish(animate, body, accent ? 0.16 : 0.09);
         }
       }),
     [onBeat, animate, scope, reduceMotion],
@@ -135,7 +143,7 @@ export function Pendulum({ bpm, onBpmChange, playing, getBeatPosition, onBeat }:
   const endY = PIVOT.y - ROD_LENGTH * Math.cos(swingRad);
 
   return (
-    <div ref={scope} className="relative aspect-[3/4] h-[min(42svh,400px)] max-w-[92vw]">
+    <div ref={scope} className="relative aspect-[3/4] h-[min(36svh,380px)] max-w-[92vw]">
       <svg
         ref={svgRef}
         viewBox="0 0 300 400"
@@ -144,53 +152,40 @@ export function Pendulum({ bpm, onBpmChange, playing, getBeatPosition, onBeat }:
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
       >
-        <defs>
-          <linearGradient id="housing" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fff" stopOpacity="0.035" />
-            <stop offset="1" stopColor="#fff" stopOpacity="0.01" />
-          </linearGradient>
-          {/* userSpaceOnUse: a vertical line has a zero-width bounding box, so a bbox-relative gradient wouldn't render. */}
-          <linearGradient id="rod" gradientUnits="userSpaceOnUse" x1="0" y1={PIVOT.y - ROD_LENGTH} x2="0" y2={PIVOT.y}>
-            <stop offset="0" stopColor="#fafafa" stopOpacity="0.95" />
-            <stop offset="1" stopColor="#a1a1aa" stopOpacity="0.8" />
-          </linearGradient>
-          <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#f4f4f5" />
-            <stop offset="0.45" stopColor="#a8a29e" />
-            <stop offset="1" stopColor="#44403c" />
-          </linearGradient>
-          <radialGradient id="glow-white">
-            <stop offset="0" stopColor="#fff" stopOpacity="0.5" />
-            <stop offset="1" stopColor="#fff" stopOpacity="0" />
-          </radialGradient>
-          <radialGradient id="glow-gold">
-            <stop offset="0" stopColor="#dcbf8a" stopOpacity="0.85" />
-            <stop offset="1" stopColor="#dcbf8a" stopOpacity="0" />
-          </radialGradient>
-        </defs>
+        {/* Housing: a soft rounded slab with a solid "thickness" underneath. */}
+        <path d={HOUSING} transform="translate(0 8)" style={{ fill: 'var(--pop-shadow)' }} />
+        <path d={HOUSING} className="fill-card" />
 
-        {/* Housing and tempo scale */}
-        <path d="M40 392 L260 392 L194 70 L106 70 Z" fill="url(#housing)" stroke="rgb(255 255 255 / 0.07)" strokeLinejoin="round" />
+        {/* Tempo scale: fat dots and chunky numbers; the one nearest the weight gets a coral bubble. */}
         <g aria-hidden>
-          {SCALE_MINOR.map((m) => {
-            const y = PIVOT.y - radiusFor(m);
-            return <line key={m} x1={124} x2={128} y1={y} y2={y} stroke="rgb(255 255 255 / 0.14)" />;
-          })}
+          {SCALE_MINOR.map((m) => (
+            <circle key={m} cx={SCALE_X} cy={PIVOT.y - radiusFor(m)} r={2} className="fill-ink-faint" />
+          ))}
           {SCALE_LABELS.map((m) => {
             const y = PIVOT.y - radiusFor(m);
             const near = Math.abs(m - bpm) / bpm < 0.06;
             return (
               <g key={m}>
-                <line x1={120} x2={128} y1={y} y2={y} stroke={near ? '#dcbf8a' : 'rgb(255 255 255 / 0.25)'} />
+                <circle cx={SCALE_X} cy={y} r={3.5} className={`transition-colors duration-300 ${near ? 'fill-coral' : 'fill-ink-faint'}`} />
+                <motion.rect
+                  x={SCALE_X - 46}
+                  y={y - 9}
+                  width={34}
+                  height={18}
+                  rx={9}
+                  className="fill-coral"
+                  initial={false}
+                  animate={{ opacity: near ? 1 : 0, scale: near ? 1 : 0.4 }}
+                  transition={JELLY}
+                  style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+                />
                 <text
-                  x={116}
+                  x={SCALE_X - 29}
                   y={y}
-                  textAnchor="end"
+                  textAnchor="middle"
                   dominantBaseline="central"
-                  fontSize="9"
-                  letterSpacing="0.5"
-                  fill={near ? '#dcbf8a' : 'rgb(255 255 255 / 0.32)'}
-                  className="font-sans tabular-nums transition-[fill] duration-300"
+                  fontSize="11.5"
+                  className={`font-sans font-black tabular-nums transition-[fill] duration-300 ${near ? 'fill-white' : 'fill-ink-soft'}`}
                 >
                   {m}
                 </text>
@@ -199,13 +194,14 @@ export function Pendulum({ bpm, onBpmChange, playing, getBeatPosition, onBeat }:
           })}
         </g>
 
-        {/* Swing path and its two ends, which light up when the rod arrives on the beat */}
+        {/* Swing path (a row of dots) and its two ends, which pop when the rod arrives on the beat */}
         <path
           d={`M${PIVOT.x - endX} ${endY} A${ROD_LENGTH} ${ROD_LENGTH} 0 0 1 ${PIVOT.x + endX} ${endY}`}
           fill="none"
-          stroke="rgb(255 255 255 / 0.06)"
-          strokeDasharray="1 5"
+          className="stroke-ink-faint"
+          strokeDasharray="0 13"
           strokeLinecap="round"
+          strokeWidth={5}
         />
         {(['left', 'right'] as const).map((side) => (
           <circle
@@ -213,21 +209,21 @@ export function Pendulum({ bpm, onBpmChange, playing, getBeatPosition, onBeat }:
             data-end={side}
             cx={PIVOT.x + (side === 'left' ? -endX : endX)}
             cy={endY}
-            r={3}
-            fill="#dcbf8a"
-            opacity={0.15}
+            r={7}
+            className="fill-coral"
+            opacity={0.25}
             style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
           />
         ))}
 
-        {/* Pivot glows */}
-        <circle data-pivot cx={PIVOT.x} cy={PIVOT.y} r={46} fill="url(#glow-white)" opacity={0} />
-        <circle data-pivot-accent cx={PIVOT.x} cy={PIVOT.y} r={62} fill="url(#glow-gold)" opacity={0} />
+        {/* Pivot puffs */}
+        <circle data-pivot cx={PIVOT.x} cy={PIVOT.y} r={34} className="fill-mint" opacity={0} style={{ transformBox: 'fill-box', transformOrigin: 'center' }} />
+        <circle data-pivot-accent cx={PIVOT.x} cy={PIVOT.y} r={44} className="fill-coral" opacity={0} style={{ transformBox: 'fill-box', transformOrigin: 'center' }} />
 
         {/* Rod, tip and sliding weight */}
         <g ref={rodRef}>
-          <line x1={PIVOT.x} y1={PIVOT.y} x2={PIVOT.x} y2={PIVOT.y - ROD_LENGTH} stroke="url(#rod)" strokeWidth={2.5} strokeLinecap="round" />
-          <circle cx={PIVOT.x} cy={PIVOT.y - ROD_LENGTH} r={3.2} fill="#fafafa" />
+          <line x1={PIVOT.x} y1={PIVOT.y} x2={PIVOT.x} y2={PIVOT.y - ROD_LENGTH} className="stroke-coral" strokeWidth={13} strokeLinecap="round" />
+          <circle cx={PIVOT.x} cy={PIVOT.y - ROD_LENGTH} r={10} className="fill-mint" />
 
           <g
             role="slider"
@@ -244,27 +240,30 @@ export function Pendulum({ bpm, onBpmChange, playing, getBeatPosition, onBeat }:
             className={`weight outline-none ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           >
             {/* Generous invisible hit area for fingers */}
-            <rect x={-48} y={-30} width={96} height={60} fill="transparent" />
-            <rect className="weight-ring" x={-31} y={-19} width={62} height={38} rx={9} fill="none" stroke="#dcbf8a" strokeOpacity={0.7} opacity={0} />
-            <ellipse cx={0} cy={4} rx={40} ry={24} fill="url(#glow-gold)" opacity={dragging ? 0.55 : 0} className="transition-opacity duration-200" />
-            <circle data-weight-glint cx={0} cy={0} r={34} fill="url(#glow-white)" opacity={0} />
-            <path
-              d="M-17 -13 H17 Q19 -13 19.6 -11 L24 11 Q24.4 13 22 13 H-22 Q-24.4 13 -24 11 L-19.6 -11 Q-19 -13 -17 -13 Z"
-              fill="url(#metal)"
-              stroke="rgb(255 255 255 / 0.35)"
-              strokeWidth={0.6}
-              style={{ filter: 'drop-shadow(0 4px 6px rgb(0 0 0 / 0.6))' }}
-              transform={dragging ? 'scale(1.08)' : undefined}
-              className="transition-transform duration-150"
-            />
-            {/* Index line: the tempo is read where this meets the scale */}
-            <line x1={-31} x2={24} y1={0} y2={0} stroke="#b89a66" strokeWidth={1.4} strokeLinecap="round" />
+            <rect x={-52} y={-38} width={104} height={76} fill="transparent" />
+            <circle className="weight-ring stroke-mustard" r={WEIGHT_R + 8} fill="none" strokeWidth={4} opacity={0} />
+            {/* Pointer that reads off the scale */}
+            <path d={`M${-WEIGHT_R - 9} 0 L${-WEIGHT_R + 2} -7 L${-WEIGHT_R + 2} 7 Z`} className="fill-mustard-deep" strokeLinejoin="round" stroke="var(--color-mustard-deep)" strokeWidth={4} />
+            <motion.g animate={{ scale: dragging ? 1.15 : 1 }} transition={JELLY}>
+              <g data-weight-body style={{ transformBox: 'fill-box', transformOrigin: 'center' }}>
+                <circle cy={5} r={WEIGHT_R} className="fill-mustard-deep" />
+                <circle r={WEIGHT_R} className="fill-mustard" />
+                {/* Face */}
+                <ellipse cx={-8} cy={-2} rx={3} ry={dragging ? 1.2 : 3.6} className="fill-cocoa transition-all duration-150" />
+                <ellipse cx={8} cy={-2} rx={3} ry={dragging ? 1.2 : 3.6} className="fill-cocoa transition-all duration-150" />
+                <ellipse cx={-14} cy={6} rx={3.6} ry={2.2} className="fill-coral" opacity={0.55} />
+                <ellipse cx={14} cy={6} rx={3.6} ry={2.2} className="fill-coral" opacity={0.55} />
+                <path d={dragging ? 'M-5 6 Q0 12 5 6 Z' : 'M-5 6 Q0 10 5 6'} className="stroke-cocoa" fill={dragging ? 'var(--color-cocoa)' : 'none'} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+                <ellipse cx={-10} cy={-15} rx={5} ry={3} fill="#fff" opacity={0.55} transform="rotate(-30 -10 -15)" />
+              </g>
+            </motion.g>
           </g>
         </g>
 
         {/* Pivot cap */}
-        <circle cx={PIVOT.x} cy={PIVOT.y} r={8} fill="#18181b" stroke="rgb(255 255 255 / 0.18)" />
-        <circle cx={PIVOT.x} cy={PIVOT.y} r={2.4} fill="#dcbf8a" />
+        <circle cx={PIVOT.x} cy={PIVOT.y + 3} r={15} className="fill-mint-deep" />
+        <circle cx={PIVOT.x} cy={PIVOT.y} r={15} className="fill-mint" />
+        <circle cx={PIVOT.x} cy={PIVOT.y} r={5} className="fill-card" />
       </svg>
     </div>
   );

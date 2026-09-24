@@ -14,20 +14,28 @@ export default defineConfig({
       // Generates the PNG icons from public/icon.svg (see pwa-assets.config.ts) and injects their <link>s.
       pwaAssets: { config: true, overrideManifestIcons: true },
       manifest: {
-        name: 'Metronome',
-        short_name: 'Metronome',
+        name: 'メトロノーム',
+        short_name: 'メトロノーム',
         description: '正確なリズムを刻む、振り子式メトロノーム',
         lang: 'ja',
-        theme_color: '#09090b',
-        background_color: '#09090b',
+        theme_color: '#fffbf0',
+        background_color: '#fffbf0',
         display: 'standalone',
         orientation: 'portrait',
         categories: ['music', 'utilities'],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        // Only Latin glyphs are used; skip precaching the other Inter subsets.
-        globIgnores: ['**/inter-{cyrillic,cyrillic-ext,greek,greek-ext,latin-ext,vietnamese}-*'],
+        // Precache the Latin Nunito face only. The Japanese rounded font is split into ~120
+        // unicode-range files; only the few this UI uses get fetched, and they're cached at runtime.
+        globIgnores: ['**/nunito-{cyrillic,cyrillic-ext,vietnamese,latin-ext}-*', '**/m-plus-rounded-1c-*'],
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\/m-plus-rounded-1c-.*\.woff2$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'fonts-ja', expiration: { maxEntries: 60 } },
+          },
+        ],
       },
     }),
   ],

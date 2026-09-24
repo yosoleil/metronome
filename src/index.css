@@ -1,24 +1,62 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/inter';
-
-@font-face {
-  font-family: 'DSEG7';
-  src: url('./assets/fonts/DSEG7Classic-Light.woff2') format('woff2');
-  font-weight: 300;
-  font-display: block;
-}
+@import '@fontsource-variable/nunito';
+@import '@fontsource/m-plus-rounded-1c/800.css';
 
 @theme {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-digital: 'DSEG7', ui-monospace, monospace;
+  /* Rounded all the way down: Nunito for Latin and digits, M PLUS Rounded 1c for Japanese. */
+  --font-sans: 'Nunito Variable', 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', ui-rounded, system-ui, sans-serif;
 
-  --color-ink: #09090b;
-  --color-gold: #dcbf8a;
-  --color-gold-soft: #b89a66;
+  --color-bg: var(--pop-bg);
+  --color-bg-deep: var(--pop-bg-deep);
+  --color-card: var(--pop-card);
+  --color-ink: var(--pop-ink);
+  --color-ink-soft: var(--pop-ink-soft);
+  --color-ink-faint: var(--pop-ink-faint);
+
+  /* Fixed dark ink for text and faces drawn on the candy colors, in either theme. */
+  --color-cocoa: #3b3240;
+
+  --color-mint: #5fd3b0;
+  --color-mint-deep: #3fb592;
+  --color-mint-pale: var(--pop-mint-pale);
+  --color-coral: #ff7f7f;
+  --color-coral-deep: #e8615f;
+  --color-coral-pale: var(--pop-coral-pale);
+  --color-mustard: #ffc93c;
+  --color-mustard-deep: #e5a91c;
+  --color-mustard-pale: var(--pop-mustard-pale);
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+  --pop-bg: #fffbf0;
+  --pop-bg-deep: #f6eedb;
+  --pop-card: #ffffff;
+  --pop-ink: #3b3240;
+  --pop-ink-soft: #8a7f86;
+  --pop-ink-faint: #ddd3c6;
+  --pop-mint-pale: #dcf6ec;
+  --pop-coral-pale: #ffe3df;
+  --pop-mustard-pale: #fff0c7;
+  /* The "thickness" under chunky surfaces. */
+  --pop-shadow: #eee3cc;
+}
+
+/* Night: warm plum instead of ivory; the candy colors stay. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --pop-bg: #2a2331;
+    --pop-bg-deep: #211b27;
+    --pop-card: #3a3143;
+    --pop-ink: #fff6ea;
+    --pop-ink-soft: #b9adb8;
+    --pop-ink-faint: #594d63;
+    --pop-mint-pale: #2f4a45;
+    --pop-coral-pale: #52353c;
+    --pop-mustard-pale: #4d4230;
+    --pop-shadow: #1a1520;
+  }
 }
 
 html,
@@ -28,21 +66,23 @@ body,
 }
 
 body {
-  @apply bg-ink font-sans text-zinc-100 antialiased;
+  @apply bg-bg font-sans font-bold text-ink antialiased;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  font-feature-settings: 'palt';
   /* Installed PWA on iOS: keep content clear of the notch and home indicator. */
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-/* Film-grain overlay to keep the large dark surfaces from looking flat. */
-.grain::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+/* A solid slab under the surface — thickness instead of a blurry drop shadow or a border. */
+@utility chunky {
+  box-shadow: 0 6px 0 var(--edge, var(--pop-shadow));
+}
+@utility chunky-sm {
+  box-shadow: 0 4px 0 var(--edge, var(--pop-shadow));
 }
 
 /* Pendulum weight: keyboard focus ring (SVG groups don't render outlines). */
