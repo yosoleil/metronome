@@ -1,0 +1,51 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+
+@font-face {
+  font-family: 'DSEG7';
+  src: url('./assets/fonts/DSEG7Classic-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-display: block;
+}
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-digital: 'DSEG7', ui-monospace, monospace;
+
+  --color-ink: #09090b;
+  --color-gold: #dcbf8a;
+  --color-gold-soft: #b89a66;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-ink font-sans text-zinc-100 antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  /* Installed PWA on iOS: keep content clear of the notch and home indicator. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Film-grain overlay to keep the large dark surfaces from looking flat. */
+.grain::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Pendulum weight: keyboard focus ring (SVG groups don't render outlines). */
+.weight:focus-visible .weight-ring {
+  opacity: 1;
+}
